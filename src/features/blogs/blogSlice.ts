@@ -12,12 +12,14 @@ export type Blog = {
 
 type BlogState = {
   blogs: Blog[];
+  blog: Blog | null;
   loading: boolean;
   error: string | null;
 };
 
 const initialState: BlogState = {
   blogs: [],
+  blog: null,
   loading: false,
   error: null
 };
@@ -68,30 +70,36 @@ export const readBlogs = createAsyncThunk(
 //Read One
 export const readBlog = createAsyncThunk(
   "blogs/fetchBlogById",
-  async ({ id }: { id: number }, { rejectWithValue}) => {
+  async ({ id }: { id: string }, { rejectWithValue}) => {
     const { data, error } = await supabase
       .from("blogs")
-      .select("*")
-      .eq("blog_id", id);
+      .select("*, users(user_email)")
+      .eq("blog_id", id)
+      .single();
     
     if (error) return rejectWithValue(error.message);
-    return data?.[0] ?? rejectWithValue("Blog not found");
+
+    return {
+      ...data,
+      blog_author_email: data.users?.user_email ?? null
+    } as Blog;
   }
 );
 //Update
 export const updateBlog = createAsyncThunk(
   "blogs/update",
-  async ({ id, title, content }: { id: number; title: string; content: string }, { rejectWithValue }) => {
+  async ({ id, title, content }: { id: string; title: string; content: string }, { rejectWithValue }) => {
     const { data, error } = await supabase
       .from("blogs")
       .update({
         blog_title: title,
         blog_content: content
       })
+      .select("*")
       .eq("blog_id", id);
 
     if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Blog not found");
+    if (!data) return rejectWithValue("Blog not found")
 
     return { message: `Blog ${id} was updated successfully`, data };
   }
@@ -99,7 +107,7 @@ export const updateBlog = createAsyncThunk(
 //Delete
 export const deleteBlog = createAsyncThunk(
   "blogs/delete",
-  async ({ id }: { id: number }, { rejectWithValue }) => {
+  async ({ id }: { id: string }, { rejectWithValue }) => {
     const { error } = await supabase
       .from("blogs")
       .delete()
@@ -123,7 +131,8 @@ const blogSlice = createSlice({
       })
       .addCase(createBlog.fulfilled, (state, action) => {
         state.loading = false;
-        console.log(action.payload);
+        console.log(action.payload.message);
+        console.log(action.payload.data);
       })
       .addCase(createBlog.rejected, (state, action) => {
         state.loading = false;
@@ -152,8 +161,8 @@ const blogSlice = createSlice({
       })
       .addCase(readBlog.fulfilled, (state, action) => {
         state.loading = false;
-        state.blogs = action.payload;
-        console.log(action.payload)
+        state.blog = action.payload;
+        console.log(action.payload);
       })
       .addCase(readBlog.rejected, (state, action) => {
         state.loading = false;
@@ -167,7 +176,8 @@ const blogSlice = createSlice({
       })
       .addCase(updateBlog.fulfilled, (state, action) => {
         state.loading = false;
-        console.log(action.payload);
+        console.log(action.payload.message);
+        console.log(action.payload.data);
       })
       .addCase(updateBlog.rejected, (state, action) => {
         state.loading = false;
@@ -181,7 +191,7 @@ const blogSlice = createSlice({
       })
       .addCase(deleteBlog.fulfilled, (state, action) => {
         state.loading = false;
-        console.log(action.payload);
+        console.log(action.payload.message);
       })
       .addCase(deleteBlog.rejected, (state, action) => {
         state.loading = false;

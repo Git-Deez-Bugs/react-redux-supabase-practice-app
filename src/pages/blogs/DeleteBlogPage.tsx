@@ -1,7 +1,62 @@
-import React from 'react'
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { deleteBlog, readBlog } from "../../features/blogs/blogSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function DeleteBlogPage() {
+
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { blog, loading, error } = useAppSelector(state => state.blogs);
+  const { id } = useParams<{ id: string }>();
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchBlog = async () => {
+      try {
+        await dispatch(readBlog({ id }));
+      } catch {
+        //
+      }
+    }
+
+    fetchBlog();
+  }, [id, dispatch]);
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      await dispatch(deleteBlog({ id }));
+      navigate("/");
+    } catch {
+      //
+    }
+  }
+
   return (
-    <div>DeleteBlogPage</div>
+    <main className="h-screen w-full flex items-center justify-center  bg-gray-100 p-30">
+      {loading ? (
+        <LoadingSpinner />
+      ) : error ? (
+        <p>{error}</p>
+      ) : (
+        <div className="flex flex-col justify-center items-center p-10 drop-shadow-2xl bg-white rounded-2xl gap-5 w-4xl">
+          <h2 className="text-2xl font-bold text-red-500">Are you sure you want to permanently delete this blog?</h2>
+          <h2 className="text-2xl font-bold wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_title}</h2>
+          <p className="wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_content}</p>
+          <div className="text-gray-500 flex justify-between items-center w-full">
+            <p>{blog?.blog_author_email}</p>
+            <p>{blog?.blog_created_at}</p>
+          </div>
+          <div className="flex justify-center items-center w-full gap-5">
+            <button className="p-4 bg-red-500 text-white rounded-md hover:scale-95 transition-transform" onClick={handleDelete}>Delete</button>
+            <button className="p-4 bg-gray-500 text-white rounded-md hover:scale-95 transition-transform" onClick={() => navigate("/")}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </main>
   )
 }
