@@ -49,7 +49,7 @@ export default function DeleteBlogPage() {
           <p className="wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_content}</p>
           <div className="text-gray-500 flex justify-between items-center w-full">
             <p>{blog?.blog_author_email}</p>
-            <p>{blog?.blog_created_at}</p>
+            <p>{new Date(blog?.blog_created_at ?? "").toLocaleDateString()}</p>
           </div>
           <div className="flex justify-center items-center w-full gap-5">
             <button className="p-4 bg-red-500 text-white rounded-md hover:scale-95 transition-transform" onClick={handleDelete}>Delete</button>
