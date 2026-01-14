@@ -7,6 +7,7 @@ export type Blog = {
   blog_content: string;
   blog_author_id: string;
   blog_author_email: string | null;
+  blog_image_path: string | null;
   blog_created_at: string;
 };
 
@@ -27,7 +28,7 @@ const initialState: BlogState = {
 //Create
 export const createBlog = createAsyncThunk(
   "blogs/create",
-  async ({ title, content }: { title: string; content: string }, { rejectWithValue }) => {
+  async ({ title, content, path }: { title: string; content: string; path: string | null }, { rejectWithValue }) => {
     const user = await supabase.auth.getUser();
     if (!user.data.user) return rejectWithValue("Unauthorized User");
     
@@ -36,7 +37,8 @@ export const createBlog = createAsyncThunk(
       .insert({
         blog_title: title,
         blog_content: content,
-        blog_author_id: user.data.user?.id
+        blog_author_id: user.data.user?.id,
+        blog_image_path: path
       });
     
     if (error) return rejectWithValue(error.message);
@@ -115,6 +117,23 @@ export const deleteBlog = createAsyncThunk(
 
     if (error) return rejectWithValue(error.message);
     return { message: `Blog ${id} was deleted successfully` };
+  }
+);
+//Upload Image
+export const uploadImage = createAsyncThunk(
+  "blogs/uploadImage",
+  async ({ file, create, path }: { file: File; create: boolean; path: string; }, { rejectWithValue }) => {
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) return rejectWithValue("Unauthorized User");
+
+    if (create) path = `${user.data.user.id}/${file.name}_${Date.now()}`;
+
+    const { data, error } = await supabase.storage
+      .from("blog-images")
+      .upload(path, file, { upsert: false });
+    
+    if (error) return rejectWithValue(error.message);
+    return data.path;
   }
 );
 

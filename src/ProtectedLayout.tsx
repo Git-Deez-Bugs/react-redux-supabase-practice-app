@@ -14,7 +14,7 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex justify-center items-center">
       <NavBar />
       <Outlet />
     </div>
