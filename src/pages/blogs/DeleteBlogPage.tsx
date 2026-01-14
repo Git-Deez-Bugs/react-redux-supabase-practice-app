@@ -41,7 +41,7 @@ export default function DeleteBlogPage() {
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
-        <p>{error}</p>
+        <p className="text-red-500">{error}</p>
       ) : (
         <div className="flex flex-col justify-center items-center p-10 drop-shadow-2xl bg-white rounded-2xl gap-5 w-4xl">
           <h2 className="text-2xl font-bold text-red-500">Are you sure you want to permanently delete this blog?</h2>
