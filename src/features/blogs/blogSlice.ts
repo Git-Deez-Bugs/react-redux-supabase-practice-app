@@ -63,20 +63,26 @@ export const readBlogs = createAsyncThunk(
 
     if (!data) return { data: [], count: 0 };
 
-    const blogsWithExtras = await Promise.all(
-      data.map(async (blog) => {
-        const signedUrl = blog.blog_image_path
-          ? await dispatch(getImage({ path: blog.blog_image_path })).unwrap()
-          : undefined;
+    const imagePaths = data.map(blog => blog.blog_image_path).filter(Boolean);
 
-        return {
-          ...blog,
-          blog_author_email: blog.users?.user_email,
-          users: undefined,
-          blog_signedUrl: signedUrl,
-        };
-      })
-    );
+    const signedUrls: Record<string, string> = {};
+
+    if(imagePaths.length > 0) {
+      const urls = await dispatch(getImages({ path: imagePaths })).unwrap();
+
+      urls.forEach(item => {
+        if (item.signedUrl && item.path) signedUrls[item.path] = item.signedUrl;
+      });
+    }
+
+    const blogsWithExtras = data.map(blog => ({
+      ...blog,
+      blog_author_email: blog.users.user_email,
+      users: undefined,
+      blog_signedUrl: blog.blog_image_path
+        ? signedUrls[blog.blog_image_path]
+        : undefined
+    }));
 
     return { data: blogsWithExtras, count };
   }
@@ -160,6 +166,18 @@ export const uploadImage = createAsyncThunk(
     return { message: `Image ${data.path} was created successfully`, data: data.path };
   }
 );
+//Get Images
+export const getImages = createAsyncThunk(
+  "blogs/getImages",
+  async ({ path }: { path: string[]; }, { rejectWithValue }) => {
+    const { data, error } = await supabase.storage
+      .from("blog-images")
+      .createSignedUrls(path, 3600);
+    
+    if (error) return rejectWithValue(error.message);
+    return data;
+  }
+)
 //Get Image
 export const getImage = createAsyncThunk(
   "blogs/getImage",

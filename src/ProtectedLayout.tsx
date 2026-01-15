@@ -7,7 +7,7 @@ export default function ProtectedLayout() {
 
   const { user, initialized } = useAppSelector(state => state.auth);
 
-  if (!initialized) return <div className="min-h-screen w-full flex justify-center items-center"><LoadingSpinner /></div>;
+  if (!initialized) return <div className="min-h-screen w-full flex justify-center items-center bg-gray-100"><LoadingSpinner /></div>;
 
   if (!user) {
     return <Navigate to="/signin" replace />;
