@@ -8,6 +8,7 @@ export type Blog = {
   blog_author_id: string;
   blog_author_email: string | null;
   blog_image_path: string | null;
+  blog_signedUrl: string | undefined;
   blog_created_at: string;
 };
 
@@ -48,7 +49,7 @@ export const createBlog = createAsyncThunk(
 //Read All
 export const readBlogs = createAsyncThunk(
   "blogs/fetchAll",
-  async ({ page, pageSize }: { page: number; pageSize: number }, { rejectWithValue }) => {
+  async ({ page, pageSize }: { page: number; pageSize: number }, { dispatch, rejectWithValue }) => {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -56,23 +57,34 @@ export const readBlogs = createAsyncThunk(
       .from("blogs")
       .select("*, users(user_email)", { count: "exact" })
       .range(from, to)
-      .order("blog_created_at", { ascending: false});
+      .order("blog_created_at", { ascending: false });
 
     if (error) return rejectWithValue(error.message);
 
-    const blogsWithEmails = data?.map(blog => ({
-      ...blog,
-      blog_author_email: blog.users?.user_email,
-      users: undefined
-    }));
+    if (!data) return { data: [], count: 0 };
 
-    return { data: blogsWithEmails, count };
+    const blogsWithExtras = await Promise.all(
+      data.map(async (blog) => {
+        const signedUrl = blog.blog_image_path
+          ? await dispatch(getImage({ path: blog.blog_image_path })).unwrap()
+          : undefined;
+
+        return {
+          ...blog,
+          blog_author_email: blog.users?.user_email,
+          users: undefined,
+          blog_signedUrl: signedUrl,
+        };
+      })
+    );
+
+    return { data: blogsWithExtras, count };
   }
 );
 //Read One
 export const readBlog = createAsyncThunk(
   "blogs/fetchBlogById",
-  async ({ id }: { id: string }, { rejectWithValue}) => {
+  async ({ id }: { id: string }, { dispatch, rejectWithValue}) => {
     const { data, error } = await supabase
       .from("blogs")
       .select("*, users(user_email)")
@@ -81,9 +93,17 @@ export const readBlog = createAsyncThunk(
     
     if (error) return rejectWithValue(error.message);
 
+    if (!data) return data;
+
+    const signedUrl = data.blog_image_path
+          ? await dispatch(getImage({ path: data.blog_image_path })).unwrap()
+          : undefined;
+
     return {
       ...data,
-      blog_author_email: data.users?.user_email ?? null
+      blog_author_email: data.users?.user_email ?? null,
+      users: undefined,
+      blog_signedUrl: signedUrl,
     } as Blog;
   }
 );
@@ -110,7 +130,10 @@ export const updateBlog = createAsyncThunk(
 //Delete
 export const deleteBlog = createAsyncThunk(
   "blogs/delete",
-  async ({ id }: { id: string }, { rejectWithValue }) => {
+  async ({ id, path }: { id: string; path: string | null }, { dispatch, rejectWithValue }) => {
+
+    if (path) await dispatch(deleteImage({ path })).unwrap();
+
     const { error } = await supabase
       .from("blogs")
       .delete()
@@ -139,7 +162,7 @@ export const uploadImage = createAsyncThunk(
 );
 //Get Image
 export const getImage = createAsyncThunk(
-  "blogs/getImages",
+  "blogs/getImage",
   async ({ path }: { path: string; }, { rejectWithValue }) => {
     const { data, error } = await supabase.storage
       .from("blog-images")
@@ -147,6 +170,18 @@ export const getImage = createAsyncThunk(
     
     if (error) return rejectWithValue(error.message);
     return data.signedUrl;
+  }
+)
+//Delete Image
+export const deleteImage = createAsyncThunk(
+  "blogs/deleteImage",
+  async ({ path }: { path: string; }, { rejectWithValue }) => {
+    const { error } = await supabase.storage
+      .from("blog-images")
+      .remove([path]);
+
+    if (error) return rejectWithValue(error.message);
+    return { message: `Image ${path} was deleted successfully` };
   }
 )
 
@@ -254,6 +289,19 @@ const blogSlice = createSlice({
         console.log(action.payload);
       })
       .addCase(getImage.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //Delete Image
+      .addCase(deleteImage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteImage.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action.payload);
+      })
+      .addCase(deleteImage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

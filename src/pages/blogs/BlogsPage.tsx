@@ -13,8 +13,6 @@ export default function BlogsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 5;
 
-
-
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -44,7 +42,7 @@ export default function BlogsPage() {
 
           <ul className="flex flex-col justify-start items-center gap-5 h-210 p-10 w-4xl overflow-y-scroll">
             {blogs.map(blog => (
-              <BlogCard key={blog.blog_id} blog={blog} />
+              <BlogCard key={blog.blog_id} blog={blog}/>
             ))}
           </ul>
 

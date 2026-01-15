@@ -29,7 +29,7 @@ export default function DeleteBlogPage() {
     if (!id) return;
 
     try {
-      await dispatch(deleteBlog({ id }));
+      await dispatch(deleteBlog({ id, path: blog?.blog_image_path || null }));
       navigate("/");
     } catch {
       //
@@ -37,16 +37,19 @@ export default function DeleteBlogPage() {
   }
 
   return (
-    <main className="h-screen w-full flex items-center justify-center  bg-gray-100 p-30">
+    <main className="min-h-screen w-full flex items-center justify-center  bg-gray-100 p-30 overflow-y-auto">
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
-        <div className="flex flex-col justify-center items-center p-10 drop-shadow-2xl bg-white rounded-2xl gap-5 w-4xl">
-          <h2 className="text-2xl font-bold text-red-500">Are you sure you want to permanently delete this blog?</h2>
+        <div className="flex flex-col justify-center items-center pt-10 p-4 drop-shadow-2xl bg-white rounded-2xl gap-5 w-full max-w-4xl">
+          <h2 className="text-2xl font-bold text-red-500 mb-3">Are you sure you want to permanently delete this blog?</h2>
           <h2 className="text-2xl font-bold wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_title}</h2>
           <p className="wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_content}</p>
+          {blog?.blog_signedUrl && (
+            <img src={blog.blog_signedUrl} alt="blog-image" className="rounded-md w-full"/>
+          )}
           <div className="text-gray-500 flex justify-between items-center w-full">
             <p>{blog?.blog_author_email}</p>
             <p>{new Date(blog?.blog_created_at ?? "").toLocaleDateString()}</p>

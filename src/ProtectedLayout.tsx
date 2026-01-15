@@ -7,14 +7,14 @@ export default function ProtectedLayout() {
 
   const { user, initialized } = useAppSelector(state => state.auth);
 
-  if (!initialized) return <LoadingSpinner />;
+  if (!initialized) return <div className="min-h-screen w-full flex justify-center items-center"><LoadingSpinner /></div>;
 
   if (!user) {
     return <Navigate to="/signin" replace />;
   }
 
   return (
-    <div className="relative flex justify-center items-center">
+    <div className="">
       <NavBar />
       <Outlet />
     </div>

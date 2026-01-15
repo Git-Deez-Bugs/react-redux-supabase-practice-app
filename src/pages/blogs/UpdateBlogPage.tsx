@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "../../hooks"
-import { updateBlog, readBlog, getImage, uploadImage } from "../../features/blogs/blogSlice"
+import { updateBlog, readBlog, uploadImage, deleteImage } from "../../features/blogs/blogSlice"
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -17,6 +17,7 @@ export default function UpdateBlogPage() {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
+  const [oldFilePath, setOldFilePath] = useState<string | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | undefined>(undefined);
   const previewUrl = file ? URL.createObjectURL(file) : signedUrl;
   const hasFile = !!file || !!filePath;
@@ -32,6 +33,8 @@ export default function UpdateBlogPage() {
           setTitle(blog.blog_title);
           setContent(blog.blog_content);
           setFilePath(blog.blog_image_path);
+          setOldFilePath(blog.blog_image_path);
+          setSignedUrl(blog.blog_signedUrl);
         }
 
       } catch {
@@ -42,30 +45,20 @@ export default function UpdateBlogPage() {
     fetchBlog();
   }, [id, dispatch]);
 
-  useEffect(() => {
-    if (!filePath || file) return;
-
-    const fetchSignedUrl = async () => {
-        try {
-          const result = await dispatch(getImage({ path: filePath })).unwrap();
-          setSignedUrl(result);
-        } catch {
-          //
-        }
-      }
-
-    fetchSignedUrl();
-  }, [dispatch, filePath, file]);
-
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!id) return;
 
     try {
-      let path = filePath ?? null;
+      let path = null;
 
       if (file) {
+
+        if (oldFilePath) {
+          await dispatch(deleteImage({ path: oldFilePath })).unwrap();
+        }
+
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 

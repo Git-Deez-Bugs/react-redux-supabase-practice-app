@@ -30,6 +30,9 @@ export default function BlogCard({ blog }: { blog: Blog }) {
       <p className="wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">
         {blog.blog_content}
       </p>
+      {blog.blog_signedUrl && (
+        <img src={blog.blog_signedUrl} alt="blog-image" className="rounded-md"/>
+      )}
       <div className="flex justify-between w-full text-gray-400 text-sm flex-wrap gap-2">
         <p className="break-all">{blog.blog_author_email}</p>
         <p className="whitespace-nowrap">
