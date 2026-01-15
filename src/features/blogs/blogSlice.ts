@@ -90,12 +90,13 @@ export const readBlog = createAsyncThunk(
 //Update
 export const updateBlog = createAsyncThunk(
   "blogs/update",
-  async ({ id, title, content }: { id: string; title: string; content: string }, { rejectWithValue }) => {
+  async ({ id, title, content, path }: { id: string; title: string; content: string; path: string | null }, { rejectWithValue }) => {
     const { data, error } = await supabase
       .from("blogs")
       .update({
         blog_title: title,
-        blog_content: content
+        blog_content: content,
+        blog_image_path: path
       })
       .select("*")
       .eq("blog_id", id);
@@ -122,20 +123,32 @@ export const deleteBlog = createAsyncThunk(
 //Upload Image
 export const uploadImage = createAsyncThunk(
   "blogs/uploadImage",
-  async ({ file, create, path }: { file: File; create: boolean; path: string; }, { rejectWithValue }) => {
+  async ({ file, path }: { file: File; path: string | null; }, { rejectWithValue }) => {
     const user = await supabase.auth.getUser();
     if (!user.data.user) return rejectWithValue("Unauthorized User");
 
-    if (create) path = `${user.data.user.id}/${file.name}_${Date.now()}`;
+    if (!path) path = `${user.data.user.id}/${file.name}_${Date.now()}`;
 
     const { data, error } = await supabase.storage
       .from("blog-images")
-      .upload(path, file, { upsert: false });
+      .upload(path, file, { upsert: true });
     
     if (error) return rejectWithValue(error.message);
-    return data.path;
+    return { message: `Image ${data.path} was created successfully`, data: data.path };
   }
 );
+//Get Image
+export const getImage = createAsyncThunk(
+  "blogs/getImages",
+  async ({ path }: { path: string; }, { rejectWithValue }) => {
+    const { data, error } = await supabase.storage
+      .from("blog-images")
+      .createSignedUrl(path, 3600);
+    
+    if (error) return rejectWithValue(error.message);
+    return data.signedUrl;
+  }
+)
 
 const blogSlice = createSlice({
   name: "blogs",
@@ -216,6 +229,33 @@ const blogSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         console.log(action.payload);
+      })
+      //Upload Image
+      .addCase(uploadImage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(uploadImage.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action.payload.message);
+      })
+      .addCase(uploadImage.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        console.log(action.payload);
+      })
+      //Get Image
+      .addCase(getImage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getImage.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action.payload);
+      })
+      .addCase(getImage.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   }
 });

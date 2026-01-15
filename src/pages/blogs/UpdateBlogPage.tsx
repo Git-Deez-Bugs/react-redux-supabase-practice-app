@@ -1,8 +1,10 @@
 import { useAppDispatch, useAppSelector } from "../../hooks"
-import { updateBlog, readBlog } from "../../features/blogs/blogSlice"
+import { updateBlog, readBlog, getImage, uploadImage } from "../../features/blogs/blogSlice"
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import Form from "../../components/Form";
+import { X } from "lucide-react";
 
 export default function UpdateBlogPage() {
 
@@ -13,6 +15,11 @@ export default function UpdateBlogPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [filePath, setFilePath] = useState<string | null>(null);
+  const [signedUrl, setSignedUrl] = useState<string | undefined>(undefined);
+  const previewUrl = file ? URL.createObjectURL(file) : signedUrl;
+  const hasFile = !!file || !!filePath;
 
   useEffect(() => {
     if (!id) return;
@@ -21,17 +28,34 @@ export default function UpdateBlogPage() {
       try {
         const blog = await dispatch(readBlog({ id })).unwrap();
 
-        if(blog) {
+        if (blog) {
           setTitle(blog.blog_title);
           setContent(blog.blog_content);
+          setFilePath(blog.blog_image_path);
         }
+
       } catch {
         //
       }
     }
 
     fetchBlog();
-  }, [id, dispatch])
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (!filePath || file) return;
+
+    const fetchSignedUrl = async () => {
+        try {
+          const result = await dispatch(getImage({ path: filePath })).unwrap();
+          setSignedUrl(result);
+        } catch {
+          //
+        }
+      }
+
+    fetchSignedUrl();
+  }, [dispatch, filePath, file]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +63,13 @@ export default function UpdateBlogPage() {
     if (!id) return;
 
     try {
-      await dispatch(updateBlog({ id, title, content })).unwrap();
+      let path = filePath ?? null;
+
+      if (file) {
+        path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
+      }
+
+      await dispatch(updateBlog({ id, title, content, path })).unwrap();
       navigate("/")
     } catch {
       //
@@ -57,6 +87,14 @@ export default function UpdateBlogPage() {
           <input placeholder="Title" type="text" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90" onChange={(e) => setTitle(e.target.value)} value={title}/>
           <label>Content:</label>
           <textarea placeholder="Lorem Ipsum" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90" onChange={(e) => setContent(e.target.value)} value={content}></textarea>
+          {hasFile ? (
+            <div className="flex w-full gap-3 relative overflow-hidden h-50 rounded-md">
+              <img src={previewUrl} alt="Blog Image" className="w-full h-full object-cover"/>
+              <X className="absolute top-5 right-5 cursor-pointer hover:scale-90 transition-transform z-10 text-white" onClick={() => {setFile(null); setFilePath(null); setSignedUrl(undefined)}}/>
+            </div>
+          ) : (
+            <Form setFile={setFile}/>
+          )}
           <button className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-95 transition-transform" disabled={ loading || !title || !content }>Update</button>
           {error && <p className="w-full text-center text-red-500">{error}</p>}
         </form>

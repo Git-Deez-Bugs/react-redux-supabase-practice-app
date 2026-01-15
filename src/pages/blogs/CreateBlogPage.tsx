@@ -15,18 +15,17 @@ export default function CreateBlogPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const previewUrl = file ? URL.createObjectURL(file) : undefined;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
 
-      let path = "temp-path";
-      const create = true;
+      let path = null;
 
       if(file) {
-        const uploadResult = await dispatch(uploadImage({ file, create, path })).unwrap();
-        path = uploadResult;
+        path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
       await dispatch(createBlog({ title, content, path })).unwrap();
@@ -48,10 +47,9 @@ export default function CreateBlogPage() {
           <label>Content:</label>
           <textarea placeholder="Lorem Ipsum" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90" onChange={(e) => setContent(e.target.value)} value={content}></textarea>
           {file ? (
-            <div className="flex w-full gap-3 relative">
-              <label>File name:</label>
-              <p className="truncate max-w-50 text-gray-500">{file.name}</p>
-              <X className="absolute right-0 cursor-pointer hover:scale-90 transition-transform" onClick={() => setFile(null)}/>
+            <div className="flex w-full gap-3 relative overflow-hidden h-50 rounded-md">
+              <img src={previewUrl} alt="Blog Image" className="w-full h-full object-cover"/>
+              <X className="absolute top-5 right-5 cursor-pointer hover:scale-90 transition-transform z-10 text-white" onClick={() => {setFile(null)}}/>
             </div>
           ) : (
             <Form setFile={setFile}/>
