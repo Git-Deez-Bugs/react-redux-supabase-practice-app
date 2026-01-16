@@ -1,4 +1,4 @@
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../hooks";
 import type { Blog } from "../features/blogs/blogSlice";
@@ -9,7 +9,7 @@ export default function BlogCard({ blog }: { blog: Blog }) {
   const { user } = useAppSelector(state => state.auth);
 
   return (
-    <li className="bg-white p-4 rounded-2xl drop-shadow-xl w-full flex flex-col items-start gap-3">
+    <li className="bg-white p-4 rounded-2xl drop-shadow-xl w-full flex flex-col items-start gap-3 cursor-pointer" onClick={() => navigate(`/blogs/${blog.blog_id}`)}>
       <div className="flex justify-between w-full items-start gap-4">
         <h3 className="text-2xl font-semibold wrap-break-word overflow-wrap-anywhere min-w-0 flex-1">
           {blog.blog_title}
@@ -38,6 +38,10 @@ export default function BlogCard({ blog }: { blog: Blog }) {
         <p className="whitespace-nowrap">
           {new Date(blog.blog_created_at).toLocaleDateString()}
         </p>
+      </div>
+      <div className="flex gap-3">
+        <p>{blog.blog_comment_count}</p>
+        <MessageCircle className=""/>
       </div>
     </li>
   );

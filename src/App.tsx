@@ -8,6 +8,7 @@ import SignOutPage from "./pages/auth/SignOutPage"
 import CreateBlogPage from "./pages/blogs/CreateBlogPage"
 import UpdateBlogPage from "./pages/blogs/UpdateBlogPage"
 import DeleteBlogPage from "./pages/blogs/DeleteBlogPage"
+import BlogPage from "./pages/blogs/BlogPage"
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<BlogsPage />} />
           <Route path="/blogs" element={<BlogsPage />} />
+          <Route path="/blogs/:id" element={<BlogPage />} />
           <Route path="/blogs/create" element={<CreateBlogPage />} />
           <Route path="/blogs/update/:id" element={<UpdateBlogPage />} />
           <Route path="/blogs/delete/:id" element={<DeleteBlogPage />} />

@@ -9,8 +9,21 @@ export type Blog = {
   blog_author_email: string | null;
   blog_image_path: string | null;
   blog_signedUrl: string | undefined;
+  blog_comment_count: number;
+  blog_comments: Comment[];
   blog_created_at: string;
 };
+
+export type Comment = {
+  comment_id: string;
+  comment_author_id: string;
+  comment_author_email: string | null;
+  comment_blog_id: string;
+  comment_text_content: string | null;
+  comment_image_path: string | null;
+  comment_created_at: string;
+  users?: { user_email: string };
+}
 
 type BlogState = {
   blogs: Blog[];
@@ -29,16 +42,19 @@ const initialState: BlogState = {
 //Create
 export const createBlog = createAsyncThunk(
   "blogs/create",
-  async ({ title, content, path }: { title: string; content: string; path: string | null }, { rejectWithValue }) => {
-    const user = await supabase.auth.getUser();
-    if (!user.data.user) return rejectWithValue("Unauthorized User");
+  async ({ title, content, path }: { title: string; content: string; path: string | null }, { getState, rejectWithValue }) => {
+
+    const state = getState() as { auth: { user: { id: string } | null } };
+    const user = state.auth.user;
+
+    if (!user) return rejectWithValue("Unauthorized User")
     
     const { data, error } = await supabase
       .from("blogs")
       .insert({
         blog_title: title,
         blog_content: content,
-        blog_author_id: user.data.user?.id,
+        blog_author_id: user.id,
         blog_image_path: path
       });
     
@@ -55,7 +71,7 @@ export const readBlogs = createAsyncThunk(
 
     const { data, error, count } = await supabase
       .from("blogs")
-      .select("*, users(user_email)", { count: "exact" })
+      .select("*, users(user_email), comment_count:comments!comment_blog_id(count)", { count: "exact" })
       .range(from, to)
       .order("blog_created_at", { ascending: false });
 
@@ -81,7 +97,8 @@ export const readBlogs = createAsyncThunk(
       users: undefined,
       blog_signedUrl: blog.blog_image_path
         ? signedUrls[blog.blog_image_path]
-        : undefined
+        : undefined,
+      blog_comment_count: blog.comment_count?.[0].count
     }));
 
     return { data: blogsWithExtras, count };
@@ -90,7 +107,8 @@ export const readBlogs = createAsyncThunk(
 //Read One
 export const readBlog = createAsyncThunk(
   "blogs/fetchBlogById",
-  async ({ id }: { id: string }, { dispatch, rejectWithValue}) => {
+  async ({ id }: { id: string; }, { dispatch, rejectWithValue }) => {
+
     const { data, error } = await supabase
       .from("blogs")
       .select("*, users(user_email)")
@@ -104,12 +122,48 @@ export const readBlog = createAsyncThunk(
     const signedUrl = data.blog_image_path
           ? await dispatch(getImage({ path: data.blog_image_path })).unwrap()
           : undefined;
-
+    
     return {
       ...data,
       blog_author_email: data.users?.user_email ?? null,
       users: undefined,
       blog_signedUrl: signedUrl,
+    } as Blog;
+  }
+);
+// Read One Blog with Comments
+export const readBlogWithComments = createAsyncThunk(
+  "blogs/fetchBlogByIdWithComments",
+  async ({ id }: { id: string; }, { dispatch, rejectWithValue }) => {
+
+    const { data, error } = await supabase
+      .from("blogs")
+      .select("*, users(user_email), comments!comment_blog_id (*, users(user_email))")
+      .eq("blog_id", id)
+      .single();
+    
+    if (error) return rejectWithValue(error.message);
+
+    if (!data) return data;
+
+    const signedUrl = data.blog_image_path
+          ? await dispatch(getImage({ path: data.blog_image_path })).unwrap()
+          : undefined;
+
+    const commentsWithAuthor = data.comments?.map((comment: Comment) => ({
+      ...comment,
+      comment_author_email: comment.users?.user_email ?? null,
+      users: undefined
+    })) ?? [];
+
+    console.log(data);
+    
+    return {
+      ...data,
+      blog_author_email: data.users?.user_email ?? null,
+      users: undefined,
+      blog_signedUrl: signedUrl,
+      blog_comments: commentsWithAuthor ?? []
     } as Blog;
   }
 );
@@ -152,11 +206,14 @@ export const deleteBlog = createAsyncThunk(
 //Upload Image
 export const uploadImage = createAsyncThunk(
   "blogs/uploadImage",
-  async ({ file, path }: { file: File; path: string | null; }, { rejectWithValue }) => {
-    const user = await supabase.auth.getUser();
-    if (!user.data.user) return rejectWithValue("Unauthorized User");
+  async ({ file, path }: { file: File; path: string | null; }, { getState, rejectWithValue }) => {
+    
+    const state = getState() as { auth: { user: { id: string } | null } };
+    const user = state.auth.user;
 
-    if (!path) path = `${user.data.user.id}/${file.name}_${Date.now()}`;
+    if (!user) return rejectWithValue("Unauthorized User")
+
+    if (!path) path = `${user.id}/${file.name}_${Date.now()}`;
 
     const { data, error } = await supabase.storage
       .from("blog-images")
@@ -202,6 +259,31 @@ export const deleteImage = createAsyncThunk(
     return { message: `Image ${path} was deleted successfully` };
   }
 )
+//Create Comments
+export const createComment = createAsyncThunk(
+  "blogs/createComment",
+  async ({ id, textContent, path }: { id: string; textContent: string | undefined; path: string | null }, { getState, rejectWithValue }) => {
+
+    const state = getState() as { auth: { user: { id: string } | null } };
+    const user = state.auth.user;
+
+    if (!user) return rejectWithValue("Unauthorized User");
+
+    const { data, error } = await supabase
+      .from("comments")
+      .insert({
+        comment_blog_id: id,
+        comment_author_id: user.id,
+        comment_text_content: textContent,
+        comment_image_path: path
+      });
+
+    if (error) return rejectWithValue(error.message);
+
+    return { message: "New comment created successfully", data };
+  }
+);
+
 
 const blogSlice = createSlice({
   name: "blogs",
@@ -253,6 +335,20 @@ const blogSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         console.log(action.payload);
+      })
+      //Read One with Comments
+      .addCase(readBlogWithComments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(readBlogWithComments.fulfilled, (state, action) => {
+        state.loading = false;
+        state.blog = action.payload;
+        console.log(action.payload);
+      })
+      .addCase(readBlogWithComments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       //Update
       .addCase(updateBlog.pending, (state) => {
@@ -322,7 +418,19 @@ const blogSlice = createSlice({
       .addCase(deleteImage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
+      })
+      .addCase(createComment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createComment.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action.payload.data);
+      })
+      .addCase(createComment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
   }
 });
 
