@@ -64,6 +64,8 @@ export default function BlogPage() {
         <p className="text-red-500">{error}</p>
       ) : (
         <div className="flex flex-col justify-center items-center py-4 drop-shadow-2xl bg-white rounded-2xl gap-5 w-full max-w-4xl">
+
+          {/* Blog Top */}
           <div className="text-gray-500 flex justify-between items-center w-full px-4">
             <p>{blog?.blog_author_email}</p>
             <div className="flex gap-3">
@@ -73,14 +75,20 @@ export default function BlogPage() {
               )}
             </div>
           </div>
+
+          {/* Blog Content */}
           <h2 className="text-justify text-2xl font-bold wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap px-4">{blog?.blog_title}</h2>
           <p className="text-justify wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap px-4">{blog?.blog_content}</p>
           {blog?.blog_signedUrl && (
             <img src={blog.blog_signedUrl} alt="blog-image" className="w-full"/>
           )}
+
+          {/* Comment Icon */}
           <div className="w-full px-4">
             <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(true)}/>
           </div>
+
+          {/* Comment Section */}
           <div className="px-4">
             <div className="w-full pt-4 text-start flex flex-col gap-3 border-t border-gray-300">
               {blog?.blog_comments?.length ? (
