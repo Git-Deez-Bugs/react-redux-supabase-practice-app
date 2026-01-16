@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { createComment, readBlogWithComments, uploadImage } from "../../features/blogs/blogSlice";
+import { createComment, getImage, readBlogWithComments, uploadImage } from "../../features/blogs/blogSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";

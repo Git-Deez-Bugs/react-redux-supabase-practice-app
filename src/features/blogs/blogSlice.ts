@@ -21,6 +21,7 @@ export type Comment = {
   comment_blog_id: string;
   comment_text_content: string | null;
   comment_image_path: string | null;
+  comment_signed_url: string | undefined;
   comment_created_at: string;
   users?: { user_email: string };
 }
@@ -150,20 +151,37 @@ export const readBlogWithComments = createAsyncThunk(
           ? await dispatch(getImage({ path: data.blog_image_path })).unwrap()
           : undefined;
 
-    const commentsWithAuthor = data.comments?.map((comment: Comment) => ({
+    const commentImagePaths = data.comments.map((comment: Comment) => comment.comment_image_path).filter(Boolean);
+
+    const commentSignedUrls: Record<string, string> = {};
+
+    if (commentImagePaths.length > 0) {
+
+      const commentImageUrls = await dispatch(getImages({ path: commentImagePaths })).unwrap();
+
+      commentImageUrls.forEach(url => {
+        if (url.signedUrl && url.path) commentSignedUrls[url.path] = url.signedUrl;
+      })
+
+    }
+
+    const commentsWithExtras = data.comments?.map((comment: Comment) => ({
       ...comment,
       comment_author_email: comment.users?.user_email ?? null,
-      users: undefined
+      comment_signed_url: comment.comment_image_path
+        ? commentSignedUrls[comment.comment_image_path]
+        : undefined,
+      users: undefined,
+      comments: undefined
     })) ?? [];
-
-    console.log(data);
     
     return {
       ...data,
       blog_author_email: data.users?.user_email ?? null,
       users: undefined,
+      comments: undefined,
       blog_signedUrl: signedUrl,
-      blog_comments: commentsWithAuthor ?? []
+      blog_comments: commentsWithExtras ?? []
     } as Blog;
   }
 );
@@ -259,7 +277,7 @@ export const deleteImage = createAsyncThunk(
     return { message: `Image ${path} was deleted successfully` };
   }
 )
-//Create Comments
+//Create Comment
 export const createComment = createAsyncThunk(
   "blogs/createComment",
   async ({ id, textContent, path }: { id: string; textContent: string | undefined; path: string | null }, { getState, rejectWithValue }) => {
@@ -419,6 +437,7 @@ const blogSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      //Create Comment
       .addCase(createComment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -431,6 +450,7 @@ const blogSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
   }
 });
 
