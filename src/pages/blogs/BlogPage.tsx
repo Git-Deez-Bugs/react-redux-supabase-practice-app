@@ -99,7 +99,7 @@ export default function BlogPage() {
 
           {/* Comment Icon */}
           <div className="w-full px-4">
-            <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(willComment ? "comment" : null)}/>
+            <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(prev => prev ? null : "comment")}/>
           </div>
 
           {/* Comment Section */}
