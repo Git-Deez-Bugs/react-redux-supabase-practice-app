@@ -31,16 +31,15 @@ export default function BlogsPage() {
   const handleNext = () => setPage(prev => Math.min(prev + 1, totalPages));
 
   return (
-    <main className={`h-screen w-full flex ${loading ? "items-center" : "items-start"} justify-center  bg-gray-100 p-30`}>
+    <main className={`min-h-screen w-full flex ${loading ? "items-center" : "items-start"} justify-center  bg-gray-100 pt-20 pb-10`}>
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <div className="flex flex-col justify-between h-full items-center gap-5">
-          <h2 className="text-3xl font-bold">Blogs</h2>
+        <div className="flex flex-col justify-between h-full items-center">
 
-          <ul className="flex flex-col justify-start items-center gap-5 h-210 p-10 w-4xl overflow-y-scroll">
+          <ul className="flex flex-col justify-start items-center gap-5 pb-10 md:p-10 w-full max-w-4xl">
             {blogs.map(blog => (
               <BlogCard key={blog.blog_id} blog={blog}/>
             ))}

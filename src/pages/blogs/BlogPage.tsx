@@ -1,11 +1,12 @@
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { createComment, getImage, readBlogWithComments, uploadImage } from "../../features/blogs/blogSlice";
+import { createComment, readBlogWithComments, updateComment, uploadImage } from "../../features/blogs/blogSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import { EllipsisVertical, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import CommentCard from "../../components/CommentCard";
 import CommentForm from "../../components/CommentForm";
+import MoreOptions from "../../components/MoreOptions";
 
 export default function BlogPage() {
 
@@ -15,10 +16,8 @@ export default function BlogPage() {
   const { user } = useAppSelector(state => state.auth);
   const { id } = useParams<{ id: string }>();
 
-  const [willComment, setWillComment] = useState(false);
-  const [textContent, setTextContent] = useState<string | undefined>("");
-  const [file, setFile] = useState<File | null>(null);
-  const previewUrl = file ? URL.createObjectURL(file) : undefined;
+  const [willComment, setWillComment] = useState<string | null>(null);
+  const [commentToEdit, setCommentToEdit] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -34,9 +33,8 @@ export default function BlogPage() {
     fetchBlog();
   }, [id, dispatch]);
 
-  const handleCreateComment = async (e: React.FormEvent) => {
+  const handleCreateComment = async (text: string | undefined, file: File | null) => {
     if(!id) return;
-    e.preventDefault();
 
     try {
       let path = null;
@@ -45,25 +43,41 @@ export default function BlogPage() {
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
-      await dispatch(createComment({ id, textContent, path })).unwrap();
-
-      setFile(null);
-      setTextContent(undefined);
+      await dispatch(createComment({ id, textContent: text, path })).unwrap();
 
       await dispatch(readBlogWithComments({ id })).unwrap();
+      setWillComment(null);
     } catch {
       //
     }
   }
 
+  const handleUpdateComment = async (text: string | undefined, file: File | null) => {
+    if (!id || !commentToEdit) return;
+
+    try {
+      let path = null;
+
+      if (file) {
+        path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
+      }
+
+      await dispatch(updateComment({ blogId: id, commentId: commentToEdit, textContent: text, path })).unwrap();
+      await dispatch(readBlogWithComments({ id })).unwrap();
+      setCommentToEdit(null)
+    } catch {
+      //
+    }
+  };
+
   return (
-    <main className="min-h-screen w-full flex items-center justify-center  bg-gray-100 p-30 overflow-y-auto">
+    <main className="min-h-screen w-full flex items-center justify-center  bg-gray-100 pt-20 md:p-30 overflow-y-auto">
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
-        <div className="flex flex-col justify-center items-center py-4 drop-shadow-2xl bg-white rounded-2xl gap-5 w-full max-w-4xl">
+        <div className="flex flex-col justify-center items-center py-4 drop-shadow-2xl bg-white md:rounded-2xl gap-5 w-full max-w-4xl">
 
           {/* Blog Top */}
           <div className="text-gray-500 flex justify-between items-center w-full px-4">
@@ -71,7 +85,7 @@ export default function BlogPage() {
             <div className="flex gap-3">
               <p>{new Date(blog?.blog_created_at ?? "").toLocaleDateString()}</p>
               { blog?.blog_author_id === user?.id && (
-                <EllipsisVertical />
+                <MoreOptions onDelete={() => navigate(`/blogs/delete/${id}`)} onEdit={() => navigate(`/blogs/update/${id}`)} />
               )}
             </div>
           </div>
@@ -85,22 +99,29 @@ export default function BlogPage() {
 
           {/* Comment Icon */}
           <div className="w-full px-4">
-            <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(true)}/>
+            <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(willComment ? "comment" : null)}/>
           </div>
 
           {/* Comment Section */}
-          <div className="px-4">
-            <div className="w-full pt-4 text-start flex flex-col gap-3 border-t border-gray-300">
-              {blog?.blog_comments?.length ? (
-                blog.blog_comments.map(comment => (
-                  <CommentCard comment={comment} />
-                ))
-              ) : null}
-              {willComment && (
-                <CommentForm file={file} setFile={setFile} textContent={textContent} setTextContent={setTextContent} previewUrl={previewUrl} handleCreateComment={handleCreateComment} />
-              )}
+          {((blog?.blog_comments ?? []).length > 0 || willComment) && (
+            <div className="px-4 w-full">
+              <div className="w-full pt-4 text-start flex flex-col gap-3 border-t border-gray-300">
+                {(blog?.blog_comments ?? []).map(comment => (
+                  <div key={comment.comment_id}>
+                    {commentToEdit === comment.comment_id ? (
+                      <CommentForm initialText={comment.comment_text_content ?? undefined} initialImageUrl={comment.comment_signed_url} onSubmit={handleUpdateComment} onClose={setCommentToEdit}/>
+                    ) : (
+                      <CommentCard comment={comment} setCommentToEdit={setCommentToEdit} id={id} userId={user?.id}/>
+                    )}
+                  </div>
+                ))}
+
+                {willComment && (
+                  <CommentForm onSubmit={handleCreateComment} onClose={setWillComment}/>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </main>

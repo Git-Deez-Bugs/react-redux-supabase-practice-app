@@ -252,7 +252,7 @@ export const getImages = createAsyncThunk(
     if (error) return rejectWithValue(error.message);
     return data;
   }
-)
+);
 //Get Image
 export const getImage = createAsyncThunk(
   "blogs/getImage",
@@ -264,7 +264,7 @@ export const getImage = createAsyncThunk(
     if (error) return rejectWithValue(error.message);
     return data.signedUrl;
   }
-)
+);
 //Delete Image
 export const deleteImage = createAsyncThunk(
   "blogs/deleteImage",
@@ -276,7 +276,7 @@ export const deleteImage = createAsyncThunk(
     if (error) return rejectWithValue(error.message);
     return { message: `Image ${path} was deleted successfully` };
   }
-)
+);
 //Create Comment
 export const createComment = createAsyncThunk(
   "blogs/createComment",
@@ -301,6 +301,52 @@ export const createComment = createAsyncThunk(
     return { message: "New comment created successfully", data };
   }
 );
+//Update Comment
+export const updateComment = createAsyncThunk(
+  "blogs/updateComment",
+  async ({ blogId, commentId, textContent, path }: { blogId: string; commentId: string; textContent: string | undefined; path: string | null }, { getState, rejectWithValue }) => {
+    
+    const state = getState() as { auth: { user: { id: string } | null } };
+    const user = state.auth.user;
+
+    if (!user) return rejectWithValue("Unauthorized User");
+
+    
+    const updateData: Record<string, string | undefined> = {
+      comment_blog_id: blogId,
+      comment_author_id: user.id,
+      comment_text_content: textContent,
+    };
+
+    if (path) {
+      updateData.comment_image_path = path;
+    }
+
+    const { data, error } = await supabase
+      .from("comments")
+      .update(updateData)
+      .eq("comment_id", commentId);
+
+    if (error) return rejectWithValue(error.message);
+    return { message: `Comment ${commentId} updated successfully`, data };
+  }
+);
+//Delete Comment
+export const deleteComment = createAsyncThunk(
+  "blogs/deleteComment",
+  async ({ id, path }: { id: string; path: string | null }, { dispatch, rejectWithValue }) => {
+
+    if (path) await dispatch(deleteImage({ path })).unwrap();
+
+    const { error } = await supabase
+      .from("comments")
+      .delete()
+      .eq("comment_id", id);
+
+    if (error) return rejectWithValue(error.message);
+    return { message: `Comment ${id} was successfully deleted`};
+  }
+)
 
 
 const blogSlice = createSlice({
@@ -450,6 +496,32 @@ const blogSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      //Update Comment
+      .addCase(updateComment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateComment.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action.payload.data);
+      })
+      .addCase(updateComment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //Delete Comment
+      .addCase(deleteComment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action.payload);
+      })
+      .addCase(deleteComment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
 
   }
 });

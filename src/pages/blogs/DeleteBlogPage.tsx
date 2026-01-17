@@ -37,16 +37,16 @@ export default function DeleteBlogPage() {
   }
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center  bg-gray-100 p-30 overflow-y-auto">
+    <main className="min-h-screen w-full flex items-center justify-center pt-20 md:bg-gray-100 md:p-30 overflow-y-auto">
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
-        <div className="flex flex-col justify-center items-center pt-10 p-4 drop-shadow-2xl bg-white rounded-2xl gap-5 w-full max-w-4xl">
+        <div className="flex flex-col justify-center items-center pt-10 p-4 md:drop-shadow-2xl bg-white rounded-2xl gap-5 w-full max-w-4xl">
           <h2 className="text-2xl font-bold text-red-500 mb-3">Are you sure you want to permanently delete this blog?</h2>
-          <h2 className="text-2xl font-bold wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_title}</h2>
-          <p className="wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap">{blog?.blog_content}</p>
+          <h2 className="text-2xl font-bold wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap text-justify">{blog?.blog_title}</h2>
+          <p className="wrap-break-word overflow-wrap-anywhere w-full whitespace-pre-wrap text-justify">{blog?.blog_content}</p>
           {blog?.blog_signedUrl && (
             <img src={blog.blog_signedUrl} alt="blog-image" className="rounded-md w-full"/>
           )}

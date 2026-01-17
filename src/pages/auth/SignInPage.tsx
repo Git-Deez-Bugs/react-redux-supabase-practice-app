@@ -27,13 +27,13 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="h-screen w-full flex flex-col justify-center items-center bg-gray-100">
-      <form onSubmit={handleSignUp} className="p-10 bg-white flex flex-col justify-center items-start gap-5 rounded-2xl drop-shadow-xl">
+    <main className="h-screen w-full flex flex-col justify-center items-center md:bg-gray-100">
+      <form onSubmit={handleSignUp} className="p-10 bg-white flex flex-col justify-center items-start gap-5 md:rounded-2xl md:drop-shadow-xl w-full max-w-110">
         <h2 className="font-bold text-3xl w-full text-center mb-5">Sign In</h2>
         <label>Email:</label>
-        <input type="text" onChange={(e) => setEmail(e.target.value)} value={email} placeholder="johndoe@email.com" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90"/>
+        <input type="text" onChange={(e) => setEmail(e.target.value)} value={email} placeholder="johndoe@email.com" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full"/>
         <label>Password:</label>
-        <input type="password" onChange={(e) => setPassword(e.target.value)} value={password} placeholder="password" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90"/>
+        <input type="password" onChange={(e) => setPassword(e.target.value)} value={password} placeholder="password" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full"/>
         <button disabled={ loading || !email || !password } className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-90 transition-transform">Sign In</button>
         {error && <p className="w-full text-center text-red-500">{error}</p>}
       </form>

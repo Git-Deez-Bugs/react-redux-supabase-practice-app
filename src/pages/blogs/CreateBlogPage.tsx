@@ -36,16 +36,16 @@ export default function CreateBlogPage() {
   }
 
   return (
-    <main className="h-screen w-full flex items-center justify-center  bg-gray-100 p-30">
+    <main className="h-screen w-full flex items-center justify-center  md:bg-gray-100 md:p-30">
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <form className="p-10 bg-white flex flex-col justify-center items-start gap-5 rounded-2xl drop-shadow-xl" onSubmit={handleCreate}>
+        <form className="p-10 bg-white flex flex-col justify-center items-start gap-5 rounded-2xl md:drop-shadow-xl w-full md:w-2xl" onSubmit={handleCreate}>
           <h2 className="font-bold text-3xl w-full text-center mb-5">Create New Blog</h2>
           <label>Title:</label>
-          <input placeholder="Title" type="text" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90" onChange={(e) => setTitle(e.target.value)} value={title}/>
+          <input placeholder="Title" type="text" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full" onChange={(e) => setTitle(e.target.value)} value={title}/>
           <label>Content:</label>
-          <textarea placeholder="Lorem Ipsum" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-90" onChange={(e) => setContent(e.target.value)} value={content}></textarea>
+          <textarea placeholder="Lorem Ipsum" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full" onChange={(e) => setContent(e.target.value)} value={content}></textarea>
           {file ? (
             <div className="flex w-full gap-3 relative overflow-hidden h-50 rounded-md">
               <img src={previewUrl} alt="Blog Image" className="w-full h-full object-cover"/>

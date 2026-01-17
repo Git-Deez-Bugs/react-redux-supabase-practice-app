@@ -15,13 +15,13 @@ export default function SignOutPage() {
   }
 
   return (
-    <main className="h-screen w-full flex items-center justify-center  bg-gray-100 p-30">
+    <main className="h-screen w-full flex items-center justify-center  md:bg-gray-100 md:p-30">
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
         <p>{error}</p>
       ) : (
-        <div className="flex flex-col justify-center items-center p-10 drop-shadow-2xl bg-white rounded-2xl gap-10">
+        <div className="flex flex-col justify-center items-center p-10 md:drop-shadow-2xl bg-white rounded-2xl gap-10">
           <h2 className="text-2xl font-bold">Are you sure you want to sign out?</h2>
           <div className="flex justify-center items-center w-full gap-5">
             <button className="p-4 bg-red-500 text-white rounded-md hover:scale-95 transition-transform" onClick={handleSignOut}>Sign Out</button>
