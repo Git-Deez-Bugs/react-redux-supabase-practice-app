@@ -318,7 +318,7 @@ export const updateComment = createAsyncThunk(
       comment_text_content: textContent,
     };
 
-    if (path) {
+    if (path !== null && path !== undefined) {
       updateData.comment_image_path = path;
     }
 
