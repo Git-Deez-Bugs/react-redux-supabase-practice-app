@@ -304,31 +304,35 @@ export const createComment = createAsyncThunk(
 //Update Comment
 export const updateComment = createAsyncThunk(
   "blogs/updateComment",
-  async ({ blogId, commentId, textContent, path }: { blogId: string; commentId: string; textContent: string | undefined; path: string | null; }, { getState, rejectWithValue }) => {
+  async ({ blogId, comment, textContent, path, removeImage }: { blogId: string; comment: Comment; textContent: string | undefined; path: string | null; removeImage: boolean }, { dispatch, getState, rejectWithValue }) => {
     
     const state = getState() as { auth: { user: { id: string } | null } };
     const user = state.auth.user;
 
     if (!user) return rejectWithValue("Unauthorized User");
-
     
-    const updateData: Record<string, string | undefined> = {
+    const updateData: Record<string, string | undefined | null> = {
       comment_blog_id: blogId,
       comment_author_id: user.id,
       comment_text_content: textContent,
     };
 
-    if (path !== null && path !== undefined) {
+    if(comment.comment_image_path && removeImage) {
+      await dispatch(deleteImage({ path: comment.comment_image_path }))
+      updateData.comment_image_path = path;
+    }
+
+    if (path) {
       updateData.comment_image_path = path;
     }
 
     const { data, error } = await supabase
       .from("comments")
       .update(updateData)
-      .eq("comment_id", commentId);
+      .eq("comment_id", comment.comment_id);
 
     if (error) return rejectWithValue(error.message);
-    return { message: `Comment ${commentId} updated successfully`, data };
+    return { message: `Comment ${comment.comment_id} updated successfully`, data };
   }
 );
 //Delete Comment

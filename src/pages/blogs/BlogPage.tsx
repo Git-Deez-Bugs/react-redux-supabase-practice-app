@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { createComment, readBlogWithComments, updateComment, uploadImage } from "../../features/blogs/blogSlice";
+import { createComment, readBlogWithComments, updateComment, uploadImage, type Comment } from "../../features/blogs/blogSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -17,7 +17,7 @@ export default function BlogPage() {
   const { id } = useParams<{ id: string }>();
 
   const [willComment, setWillComment] = useState<string | null>(null);
-  const [commentToEdit, setCommentToEdit] = useState<string | null>(null);
+  const [commentToEdit, setCommentToEdit] = useState<Comment | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -62,11 +62,7 @@ export default function BlogPage() {
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
-      if(removeImage) {
-        path = "";
-      }
-
-      await dispatch(updateComment({ blogId: id, commentId: commentToEdit, textContent: text, path })).unwrap();
+      await dispatch(updateComment({ blogId: id, comment: commentToEdit, textContent: text, path, removeImage })).unwrap();
 
       await dispatch(readBlogWithComments({ id })).unwrap();
       setCommentToEdit(null)
@@ -117,8 +113,8 @@ export default function BlogPage() {
                 )}
                 {(blog?.blog_comments ?? []).map(comment => (
                   <div key={comment.comment_id}>
-                    {commentToEdit === comment.comment_id ? (
-                      <CommentForm initialText={comment.comment_text_content ?? undefined} initialImageUrl={comment.comment_signed_url} onSubmit={handleUpdateComment} onClose={setCommentToEdit}/>
+                    {commentToEdit?.comment_id === comment.comment_id ? (
+                      <CommentForm initialText={comment.comment_text_content ?? undefined} initialImageUrl={comment.comment_signed_url} onSubmit={handleUpdateComment} onClose={() => setCommentToEdit(null)}/>
                     ) : (
                       <CommentCard comment={comment} setCommentToEdit={setCommentToEdit} id={id} userId={user?.id}/>
                     )}

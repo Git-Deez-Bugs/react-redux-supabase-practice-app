@@ -4,7 +4,7 @@ import MoreOptions from "./MoreOptions";
 
 type CommentCardProps = {
   comment: Comment;
-  setCommentToEdit: (commentId: string) => void;
+  setCommentToEdit: (comment: Comment) => void;
   id: string | undefined;
   userId: string | undefined;
 }
@@ -30,7 +30,7 @@ export default function CommentCard({ comment, setCommentToEdit, id, userId }: C
         <p className="font-semibold">{comment.comment_author_email}</p>
         {comment.comment_author_id === userId &&
           <MoreOptions
-            onEdit={() => setCommentToEdit(comment.comment_id)}
+            onEdit={() => setCommentToEdit(comment)}
             onDelete={handleDelete}
           />
         }
