@@ -28,7 +28,7 @@ export default function CommentCard({ comment, setCommentToEdit, id, userId }: C
     <div key={comment.comment_id} className="bg-gray-100 w-full p-4 rounded-md flex flex-col">
       <div className="flex justify-between">
         <p className="font-semibold">{comment.comment_author_email}</p>
-        {comment.comment_id === userId &&
+        {comment.comment_author_id === userId &&
           <MoreOptions
             onEdit={() => setCommentToEdit(comment.comment_id)}
             onDelete={handleDelete}

@@ -52,23 +52,29 @@ export default function BlogPage() {
     }
   }
 
-  const handleUpdateComment = async (text: string | undefined, file: File | null) => {
+  const handleUpdateComment = async (text: string | undefined, file: File | null, removeImage: boolean) => {
     if (!id || !commentToEdit) return;
 
     try {
       let path = null;
 
-      if (file) {
+      if(file) {
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
+      if(removeImage) {
+        path = "";
+      }
+
       await dispatch(updateComment({ blogId: id, commentId: commentToEdit, textContent: text, path })).unwrap();
+
       await dispatch(readBlogWithComments({ id })).unwrap();
       setCommentToEdit(null)
     } catch {
       //
     }
   };
+
 
   return (
     <main className="min-h-screen w-full flex items-center justify-center  bg-gray-100 pt-20 md:p-30 overflow-y-auto">
@@ -106,6 +112,9 @@ export default function BlogPage() {
           {((blog?.blog_comments ?? []).length > 0 || willComment) && (
             <div className="px-4 w-full">
               <div className="w-full pt-4 text-start flex flex-col gap-3 border-t border-gray-300">
+                {willComment && (
+                  <CommentForm onSubmit={handleCreateComment} onClose={setWillComment}/>
+                )}
                 {(blog?.blog_comments ?? []).map(comment => (
                   <div key={comment.comment_id}>
                     {commentToEdit === comment.comment_id ? (
@@ -115,10 +124,6 @@ export default function BlogPage() {
                     )}
                   </div>
                 ))}
-
-                {willComment && (
-                  <CommentForm onSubmit={handleCreateComment} onClose={setWillComment}/>
-                )}
               </div>
             </div>
           )}

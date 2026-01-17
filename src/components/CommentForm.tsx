@@ -4,7 +4,7 @@ import { useState } from 'react';
 type CommentFormProps = {
   initialText?: string;
   initialImageUrl?: string;
-  onSubmit: (text: string | undefined, file: File | null) => Promise<void>;
+  onSubmit: (text: string | undefined, file: File | null, removeImage: boolean) => Promise<void>;
   onClose: (close: string | null) => void;
 };
 
@@ -12,12 +12,15 @@ export default function CommentForm({ initialText, initialImageUrl, onSubmit, on
 
   const [textContent, setTextContent] = useState<string | undefined>(initialText);
   const [file, setFile] = useState<File | null>(null);
+  const [currentImage, setCurrentImage] = useState<string | undefined>(initialImageUrl);
 
-  const previewSrc = file ? URL.createObjectURL(file) : initialImageUrl;
+
+  const previewSrc = file ? URL.createObjectURL(file) : currentImage;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(textContent, file);
+    const removeImage = !currentImage && !file && !!initialImageUrl;
+    await onSubmit(textContent, file, removeImage);
     setTextContent(undefined);
     setFile(null);
   };
@@ -32,7 +35,10 @@ export default function CommentForm({ initialText, initialImageUrl, onSubmit, on
 
       <div className="flex justify-between items-end mt-2">
         {previewSrc ? (
-          <img src={previewSrc} className="w-3xs rounded-md" />
+          <div className='relative'>
+            <X className='absolute right-0 hover:scale-90 transition-transform' onClick={() => {setFile(null); setCurrentImage(undefined);}}/>
+            <img src={previewSrc} className="w-3xs rounded-md" />
+          </div>
         ) : (
           <>
             <input
@@ -46,12 +52,12 @@ export default function CommentForm({ initialText, initialImageUrl, onSubmit, on
               }}
             />
             <label htmlFor="file-input">
-              <ImagePlus className="cursor-pointer text-gray-500" />
+              <ImagePlus className="cursor-pointer text-gray-500 hover:scale-90 transition-transform" />
             </label>
           </>
         )}
 
-        <button type="submit" disabled={!textContent && !file} className="text-blue-500 disabled:text-gray-400 hover:scale-90 transition-transform">
+        <button type="submit" disabled={!textContent && !file && !currentImage} className="text-blue-500 disabled:text-gray-400 hover:scale-90 transition-transform disabled:scale-100">
           <SendHorizontal />
         </button>
       </div>

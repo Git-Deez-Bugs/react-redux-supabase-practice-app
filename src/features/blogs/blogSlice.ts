@@ -304,7 +304,7 @@ export const createComment = createAsyncThunk(
 //Update Comment
 export const updateComment = createAsyncThunk(
   "blogs/updateComment",
-  async ({ blogId, commentId, textContent, path }: { blogId: string; commentId: string; textContent: string | undefined; path: string | null }, { getState, rejectWithValue }) => {
+  async ({ blogId, commentId, textContent, path }: { blogId: string; commentId: string; textContent: string | undefined; path: string | null; }, { getState, rejectWithValue }) => {
     
     const state = getState() as { auth: { user: { id: string } | null } };
     const user = state.auth.user;
