@@ -5,7 +5,7 @@ type CommentFormProps = {
   initialText?: string;
   initialImageUrl?: string;
   onSubmit: (text: string | undefined, file: File | null, removeImage: boolean) => Promise<void>;
-  onClose: (close: string | null) => void;
+  onClose: () => void;
 };
 
 export default function CommentForm({ initialText, initialImageUrl, onSubmit, onClose }: CommentFormProps) {
@@ -30,13 +30,15 @@ export default function CommentForm({ initialText, initialImageUrl, onSubmit, on
 
       <div className='flex justify-between'>
         <textarea className="bg-gray-100 w-full focus:outline-none" value={textContent} onChange={(e) => setTextContent(e.target.value)}/>
-        <X className='hover:scale-90 transition-transform' onClick={() => onClose(null)}/>
+        <X className='hover:scale-90 transition-transform' onClick={() => onClose()}/>
       </div>
 
       <div className="flex justify-between items-end mt-2">
         {previewSrc ? (
           <div className='relative'>
-            <X className='absolute right-0 hover:scale-90 transition-transform' onClick={() => {setFile(null); setCurrentImage(undefined);}}/>
+            <div className='absolute right-1 top-1 hover:scale-90 transition-transform p-1 bg-white rounded-sm'>
+              <X className='text-black h-4 w-4' onClick={() => {setFile(null); setCurrentImage(undefined);}}/>
+            </div>
             <img src={previewSrc} className="w-3xs rounded-md" />
           </div>
         ) : (

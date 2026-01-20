@@ -17,7 +17,7 @@ export default function CommentCard({ comment, setCommentToEdit, id, userId }: C
     if (!id || !comment.comment_id) return;
     
     try {
-      await dispatch(deleteComment({ id: comment.comment_id, path: comment.comment_image_path || null }));
+      await dispatch(deleteComment({ id: comment.comment_id, path: comment.comment_image_path })).unwrap();
       await dispatch(readBlogWithComments({ id })).unwrap();
     } catch {
       //

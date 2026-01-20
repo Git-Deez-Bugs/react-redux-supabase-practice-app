@@ -1,4 +1,4 @@
-import { EllipsisVertical } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type MoreOptionsProps = {
@@ -24,10 +24,7 @@ export default function MoreOptions({ onEdit, onDelete }: MoreOptionsProps) {
 
   return (
     <div ref={ref} className="relative">
-      <EllipsisVertical
-        className="text-gray-500 cursor-pointer hover:scale-90 transition-transform"
-        onClick={(e) => {e.stopPropagation(); setOpen(!open)}}
-      />
+      <Ellipsis className="text-gray-500 cursor-pointer hover:scale-90 transition-transform" onClick={(e) => {e.stopPropagation(); setOpen(!open)}}/>
 
       {open && (
         <div className="absolute right-0 mt-2 w-28 bg-white rounded-md shadow-md z-10">

@@ -16,7 +16,7 @@ export default function BlogPage() {
   const { user } = useAppSelector(state => state.auth);
   const { id } = useParams<{ id: string }>();
 
-  const [willComment, setWillComment] = useState<string | null>(null);
+  const [willComment, setWillComment] = useState<boolean>(false);
   const [commentToEdit, setCommentToEdit] = useState<Comment | null>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function BlogPage() {
     fetchBlog();
   }, [id, dispatch]);
 
-  const handleCreateComment = async (text: string | undefined, file: File | null) => {
+  const handleCreateComment = async (textContent: string | undefined, file: File | null) => {
     if(!id) return;
 
     try {
@@ -43,16 +43,16 @@ export default function BlogPage() {
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
-      await dispatch(createComment({ id, textContent: text, path })).unwrap();
+      await dispatch(createComment({ id, textContent, path })).unwrap();
 
       await dispatch(readBlogWithComments({ id })).unwrap();
-      setWillComment(null);
+      setWillComment(false);
     } catch {
       //
     }
   }
 
-  const handleUpdateComment = async (text: string | undefined, file: File | null, removeImage: boolean) => {
+  const handleUpdateComment = async (textContent: string | undefined, file: File | null, removeImage: boolean) => {
     if (!id || !commentToEdit) return;
 
     try {
@@ -62,7 +62,7 @@ export default function BlogPage() {
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
-      await dispatch(updateComment({ blogId: id, comment: commentToEdit, textContent: text, path, removeImage })).unwrap();
+      await dispatch(updateComment({ blogId: id, comment: commentToEdit, textContent, path, removeImage })).unwrap();
 
       await dispatch(readBlogWithComments({ id })).unwrap();
       setCommentToEdit(null)
@@ -101,7 +101,7 @@ export default function BlogPage() {
 
           {/* Comment Icon */}
           <div className="w-full px-4">
-            <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(prev => prev ? null : "comment")}/>
+            <MessageCircle className="cursor-pointer hover:scale-95 transition-transform" onClick={() => setWillComment(!willComment)}/>
           </div>
 
           {/* Comment Section */}
@@ -109,7 +109,7 @@ export default function BlogPage() {
             <div className="px-4 w-full">
               <div className="w-full pt-4 text-start flex flex-col gap-3 border-t border-gray-300">
                 {willComment && (
-                  <CommentForm onSubmit={handleCreateComment} onClose={setWillComment}/>
+                  <CommentForm onSubmit={handleCreateComment} onClose={() => setWillComment(!willComment)}/>
                 )}
                 {(blog?.blog_comments ?? []).map(comment => (
                   <div key={comment.comment_id}>

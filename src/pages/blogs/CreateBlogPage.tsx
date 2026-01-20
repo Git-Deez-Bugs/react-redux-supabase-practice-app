@@ -49,12 +49,14 @@ export default function CreateBlogPage() {
           {file ? (
             <div className="flex w-full gap-3 relative overflow-hidden h-50 rounded-md">
               <img src={previewUrl} alt="Blog Image" className="w-full h-full object-cover"/>
-              <X className="absolute top-5 right-5 cursor-pointer hover:scale-90 transition-transform z-10 text-white" onClick={() => {setFile(null)}}/>
+              <div className="bg-white p-1 absolute top-3 right-3 rounded-sm cursor-pointer hover:scale-90 transition-transform z-10">
+                <X className="z-20 text-black" onClick={() => {setFile(null)}}/>
+              </div>
             </div>
           ) : (
             <Form setFile={setFile}/>
           )}
-          <button className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-95 transition-transform" disabled={ loading || !title || !content }>Create</button>
+          <button className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-95 transition-transform" disabled={ loading || !title || (!content && !file) }>Create</button>
           {error && <p className="w-full text-center text-red-500">{error}</p>}
         </form>
       )}

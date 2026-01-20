@@ -96,6 +96,7 @@ export const readBlogs = createAsyncThunk(
       ...blog,
       blog_author_email: blog.users.user_email,
       users: undefined,
+      comment_count: undefined,
       blog_signedUrl: blog.blog_image_path
         ? signedUrls[blog.blog_image_path]
         : undefined,
@@ -172,7 +173,6 @@ export const readBlogWithComments = createAsyncThunk(
         ? commentSignedUrls[comment.comment_image_path]
         : undefined,
       users: undefined,
-      comments: undefined
     })) ?? [];
     
     return {
@@ -304,21 +304,15 @@ export const createComment = createAsyncThunk(
 //Update Comment
 export const updateComment = createAsyncThunk(
   "blogs/updateComment",
-  async ({ blogId, comment, textContent, path, removeImage }: { blogId: string; comment: Comment; textContent: string | undefined; path: string | null; removeImage: boolean }, { dispatch, getState, rejectWithValue }) => {
-    
-    const state = getState() as { auth: { user: { id: string } | null } };
-    const user = state.auth.user;
-
-    if (!user) return rejectWithValue("Unauthorized User");
+  async ({ blogId, comment, textContent, path, removeImage }: { blogId: string; comment: Comment; textContent: string | undefined; path: string | null; removeImage: boolean }, { dispatch, rejectWithValue }) => {
     
     const updateData: Record<string, string | undefined | null> = {
       comment_blog_id: blogId,
-      comment_author_id: user.id,
       comment_text_content: textContent,
     };
 
-    if(comment.comment_image_path && removeImage) {
-      await dispatch(deleteImage({ path: comment.comment_image_path }))
+    if(removeImage) {
+      await dispatch(deleteImage({ path: comment.comment_image_path! }))
       updateData.comment_image_path = path;
     }
 
