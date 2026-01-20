@@ -31,7 +31,7 @@ export default function BlogCard({ blog }: { blog: Blog }) {
         {blog.blog_content}
       </p>
       {blog.blog_signedUrl && (
-        <img src={blog.blog_signedUrl} alt="blog-image" className=""/>
+        <img src={blog.blog_signedUrl} alt="blog-image" className="w-full"/>
       )}
       <div className="flex gap-3 px-4">
         <p>{blog.blog_comment_count}</p>
