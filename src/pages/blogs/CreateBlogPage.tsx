@@ -56,7 +56,7 @@ export default function CreateBlogPage() {
           ) : (
             <Form setFile={setFile}/>
           )}
-          <button className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-95 transition-transform" disabled={ loading || !title || (!content && !file) }>Create</button>
+          <button className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-95 transition-transform disabled:scale-100" disabled={ loading || !title || (!content && !file) }>Create</button>
           {error && <p className="w-full text-center text-red-500">{error}</p>}
         </form>
       )}
