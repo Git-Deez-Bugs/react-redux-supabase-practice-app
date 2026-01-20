@@ -311,19 +311,23 @@ export const updateComment = createAsyncThunk(
       comment_text_content: textContent,
     };
 
-    if(removeImage) {
-      await dispatch(deleteImage({ path: comment.comment_image_path! }))
-      updateData.comment_image_path = path;
-    }
-
     if (path) {
       updateData.comment_image_path = path;
+    } 
+
+    if (removeImage) {
+      updateData.comment_image_path = null;
     }
 
     const { data, error } = await supabase
       .from("comments")
       .update(updateData)
       .eq("comment_id", comment.comment_id);
+
+    const shouldDeleteOldImage = removeImage || (path && comment.comment_image_path);
+    if (shouldDeleteOldImage) {
+      await dispatch(deleteImage({ path: comment.comment_image_path! }));
+    }
 
     if (error) return rejectWithValue(error.message);
     return { message: `Comment ${comment.comment_id} updated successfully`, data };

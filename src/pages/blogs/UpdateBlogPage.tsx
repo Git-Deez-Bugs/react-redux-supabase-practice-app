@@ -17,10 +17,9 @@ export default function UpdateBlogPage() {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
-  const [oldFilePath, setOldFilePath] = useState<string | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | undefined>(undefined);
   const previewUrl = file ? URL.createObjectURL(file) : signedUrl;
-  const hasFile = !!file || !!filePath;
+  const hasFile = !!file || !!signedUrl;
 
   useEffect(() => {
     if (!id) return;
@@ -33,7 +32,6 @@ export default function UpdateBlogPage() {
           setTitle(blog.blog_title);
           setContent(blog.blog_content);
           setFilePath(blog.blog_image_path);
-          setOldFilePath(blog.blog_image_path);
           setSignedUrl(blog.blog_signedUrl);
         }
 
@@ -51,18 +49,22 @@ export default function UpdateBlogPage() {
     if (!id) return;
 
     try {
-      let path = null;
+      let path = filePath;
+
+      if (filePath && !signedUrl) {
+        path = null;
+      }
 
       if (file) {
-
-        if (oldFilePath) {
-          await dispatch(deleteImage({ path: oldFilePath })).unwrap();
-        }
-
         path = (await dispatch(uploadImage({ file, path })).unwrap()).data;
       }
 
       await dispatch(updateBlog({ id, title, content, path })).unwrap();
+
+      if (filePath && !signedUrl) {
+        await dispatch(deleteImage({ path: filePath })).unwrap();
+      }
+
       navigate("/")
     } catch {
       //
@@ -84,7 +86,7 @@ export default function UpdateBlogPage() {
             <div className="flex w-full gap-3 relative overflow-hidden h-50 rounded-md">
               <img src={previewUrl} alt="Blog Image" className="w-full h-full object-cover"/>
               <div className="bg-white p-1 absolute top-3 right-3 rounded-sm cursor-pointer hover:scale-90 transition-transform z-10">
-                <X className="z-20 text-black" onClick={() => {setFile(null); setFilePath(null); setSignedUrl(undefined)}}/>
+                <X className="z-20 text-black" onClick={() => {setFile(null); setSignedUrl(undefined)}}/>
               </div>
             </div>
           ) : (
