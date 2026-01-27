@@ -106,7 +106,7 @@ export const readBlogs = createAsyncThunk(
     return { data: blogsWithExtras, count };
   }
 );
-//Read One
+//Read One for Update Blog
 export const readBlog = createAsyncThunk(
   "blogs/fetchBlogById",
   async ({ id }: { id: string; }, { dispatch, rejectWithValue }) => {
@@ -208,15 +208,24 @@ export const updateBlog = createAsyncThunk(
 //Delete
 export const deleteBlog = createAsyncThunk(
   "blogs/delete",
-  async ({ id, path }: { id: string; path: string | null }, { dispatch, rejectWithValue }) => {
+  async ({ id, path }: { id: string; path: string | null }, { dispatch, getState, rejectWithValue }) => {
+
+    const state = getState() as { blogs: { blog: Blog } };
+    const blog = state.blogs.blog;
 
     if (path) await dispatch(deleteImage({ path })).unwrap();
+
+    const commentImagePaths = blog.blog_comments.map((comment: Comment) => comment.comment_image_path).filter((p): p is string => p !== null);
+
+    if (commentImagePaths.length > 0) await dispatch(deleteImage({ path: commentImagePaths })).unwrap();
 
     const { error } = await supabase
       .from("blogs")
       .delete()
       .eq("blog_id", id);
 
+
+    
     if (error) return rejectWithValue(error.message);
     return { message: `Blog ${id} was deleted successfully` };
   }
@@ -268,13 +277,21 @@ export const getImage = createAsyncThunk(
 //Delete Image
 export const deleteImage = createAsyncThunk(
   "blogs/deleteImage",
-  async ({ path }: { path: string; }, { rejectWithValue }) => {
+  async (
+    { path }: { path: string | string[] },
+    { rejectWithValue }
+  ) => {
+    const paths = Array.isArray(path) ? path : [path];
+
     const { error } = await supabase.storage
       .from("blog-images")
-      .remove([path]);
+      .remove(paths);
 
     if (error) return rejectWithValue(error.message);
-    return { message: `Image ${path} was deleted successfully` };
+
+    return {
+      message: `Image(s) deleted successfully`,
+    };
   }
 );
 //Create Comment
@@ -324,12 +341,13 @@ export const updateComment = createAsyncThunk(
       .update(updateData)
       .eq("comment_id", comment.comment_id);
 
+    if (error) return rejectWithValue(error.message);
+    
     const shouldDeleteOldImage = removeImage || (path && comment.comment_image_path);
     if (shouldDeleteOldImage) {
       await dispatch(deleteImage({ path: comment.comment_image_path! }));
     }
 
-    if (error) return rejectWithValue(error.message);
     return { message: `Comment ${comment.comment_id} updated successfully`, data };
   }
 );

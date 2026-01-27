@@ -9,7 +9,7 @@ export default function AuthListener() {
 
   useEffect(() => {
     const { data: { subscription }} = supabase.auth.onAuthStateChange((_event, session) => {
-      dispatch(setUser(session?.user ?? null));
+      dispatch(setUser(session?.user));
     });
 
     return () => subscription.unsubscribe();

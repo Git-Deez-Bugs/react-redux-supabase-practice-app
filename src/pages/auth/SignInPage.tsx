@@ -34,8 +34,8 @@ export default function SignInPage() {
         <input type="text" onChange={(e) => setEmail(e.target.value)} value={email} placeholder="johndoe@email.com" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full"/>
         <label>Password:</label>
         <input type="password" onChange={(e) => setPassword(e.target.value)} value={password} placeholder="password" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full"/>
-        <button disabled={ loading || !email || !password } className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-90 transition-transform">Sign In</button>
-        {error && <p className="w-full text-center text-red-500">{error}</p>}
+        <button disabled={ loading || !email || !password } className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-90 disabled:scale-100 transition-transform">Sign In</button>
+        {error && <p className="w-full text-center text-red-500">{error}</p>} 
       </form>
       <p className="mt-5 text-gray-500">Doesn't have an account yet?</p>
       <p onClick={() => navigate("/signup")} className="cursor-pointer text-blue-500 hover:underline">Sign Up</p>

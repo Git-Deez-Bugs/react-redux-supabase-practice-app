@@ -34,7 +34,7 @@ export default function SignUpPage() {
         <input type="text" onChange={(e) => setEmail(e.target.value)} value={email} placeholder="johndoe@email.com" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full"/>
         <label>Password:</label>
         <input type="password" onChange={(e) => setPassword(e.target.value)} value={password} placeholder="password" className="bg-gray-100 border border-gray-300 rounded-md p-4 w-full"/>
-        <button disabled={ loading || !email || !password } className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-90 transition-transform">Sign Up</button>
+        <button disabled={ loading || !email || !password } className="bg-blue-500 p-4 w-full rounded-md text-white text-center mt-5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:scale-90 transition-transform disabled:scale-100">Sign Up</button>
         {error && <p className="w-full text-center text-red-500">{error}</p>}
       </form>
       <p className="mt-5 text-gray-500">Already have an account?</p>

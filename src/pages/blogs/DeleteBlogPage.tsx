@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { deleteBlog, readBlog } from "../../features/blogs/blogSlice";
+import { deleteBlog, readBlogWithComments } from "../../features/blogs/blogSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -16,7 +16,7 @@ export default function DeleteBlogPage() {
 
     const fetchBlog = async () => {
       try {
-        await dispatch(readBlog({ id }));
+        await dispatch(readBlogWithComments({ id }));
       } catch {
         //
       }
