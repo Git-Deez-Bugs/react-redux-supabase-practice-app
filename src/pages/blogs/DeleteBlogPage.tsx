@@ -29,7 +29,7 @@ export default function DeleteBlogPage() {
     if (!id) return;
 
     try {
-      await dispatch(deleteBlog({ id, path: blog?.blog_image_path || null }));
+      await dispatch(deleteBlog({ id, path: blog?.blog_image_path || null })).unwrap();
       navigate("/");
     } catch {
       //

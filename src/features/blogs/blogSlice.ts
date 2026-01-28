@@ -140,10 +140,10 @@ export const readBlogWithComments = createAsyncThunk(
 
     const { data, error } = await supabase
       .from("blogs")
-      .select("*, users(user_email), comments!comment_blog_id (*, users(user_email))")
+      .select("*, users(user_email), comments(*, users(user_email))")
       .eq("blog_id", id)
       .single();
-    
+      
     if (error) return rejectWithValue(error.message);
 
     if (!data) return data;
@@ -224,8 +224,6 @@ export const deleteBlog = createAsyncThunk(
       .delete()
       .eq("blog_id", id);
 
-
-    
     if (error) return rejectWithValue(error.message);
     return { message: `Blog ${id} was deleted successfully` };
   }
@@ -364,7 +362,7 @@ export const deleteComment = createAsyncThunk(
       .eq("comment_id", id);
 
     if (error) return rejectWithValue(error.message);
-    return { message: `Comment ${id} was successfully deleted`};
+    return { message: `Comment ${id} was successfully deleted` };
   }
 )
 
